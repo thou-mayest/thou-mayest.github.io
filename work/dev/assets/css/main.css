@@ -2379,6 +2379,10 @@ input, select, textarea {
 		border-bottom: none;
 		position: relative;
 	}
+	a:hover {
+		border-bottom-color: transparent;
+		color: #7c7b7b !important;
+	}
 
 		.icon:before {
 			-moz-osx-font-smoothing: grayscale;
