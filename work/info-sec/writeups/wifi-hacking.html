@@ -1,0 +1,219 @@
+<!DOCTYPE HTML>
+<!--
+	Phantom by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>wifi hacking for skiddies</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Header -->
+					<header id="header">
+						<div class="inner">
+
+							<!-- Logo -->
+								<a href="/work/info-sec/" class="logo">
+									<span class="symbol"><img src="images/logo.svg" alt="" /></span><span class="title">HOME</span>
+								</a>
+
+							<!-- Nav 
+								<nav>
+									<ul>
+										<li><a href="#menu">Menu</a></li>
+									</ul>
+								</nav>
+
+						</div>
+					</header>
+					-->
+
+				<!-- Menu 
+					<nav id="menu">
+						<h2>Menu</h2>
+						<ul>
+							<li><a href="index.html">Home</a></li>
+							<li><a href="generic.html">Ipsum veroeros</a></li>
+							<li><a href="generic.html">Tempus etiam</a></li>
+							<li><a href="generic.html">Consequat dolor</a></li>
+							<li><a href="elements.html">Elements</a></li>
+						</ul>
+					</nav>
+				-->
+				<!-- Main -->
+					<div id="main">
+						<div class="inner">
+							<h1>wifi hacking for skiddies</h1>
+							<span class="image main"><img src="images/pic13.jpg" alt="" /></span>
+							<p>in this article i will be walking you throu the main methods of hacking or cracking wifi passwords, the old way and the new way.</p>
+							<p>The old way am reffering to would be hacking the wifi throu wps IF it's vulnerable , and it's a big if, nowadays it's not that often that you find routers still vulnerable to these attacks, online brute forcing will result in WPS pin lock , there are ways to flood the router till it restarts , but again , IF it's vulnerable to that too , it's worht the shot , but most likely won't work these days.
+							<br> We will start off then with the most reliable and easiest attacks : 
+							<br> <a href="#wps">wps pin attacks </a> which depends on the router if vulnerable.
+							<br>Then <a href="#WPA">WPA/WPA2 brute forcing</a> which should work as long as the password is crackable , meaning you either have or made a good list that should contain the password.
+							</p>
+						</div>
+						<h2 id="wps">WPS pin attacks</h2>
+						<p>There is two main methods to attack wps pins , offline method and online method , the aim of both it to recover the WPS pin then hopefully connect to the wifi and get the WPA password, to do so there's many tools like wifite, airgeddon, bully , reaver, but in this article am going to use reaver , other tools are very similar and it's basically the same idea you can do the same type of attacks using any one you prefer.
+							<h3>pixi dust</h3>
+							<p>
+								pixi dust is an offline attack to brute force the WPS pin value , if you have your kali or parrot linux set up you should have pixi dust and reaver installed.
+								<br> You also need a wifi adapter that supports monitor mode .
+								<br> Quick tip, and note to self : rename wifi adapter from long random name (as an example here will be using wlanxxxxxx ) to something ez wlan0:
+<pre><code>ip link set wlanxxxxxxxxx down
+	ip link set wlanxxxxxxx name wlan0
+	ip link set wlan up
+</code></pre>
+							this is not a presistante method , still it's a quick fix that helps anyway.
+							</p>
+						</p>
+						<p>
+							NOW to some real hacking 
+							first you need to set the wireless card to monitor mode, open a terminal as root and type:
+							<pre><code>airmon-ng start < wlan interface > </code></pre>
+							<span class="image main"><img src="images/airmon.jpg" alt="" /></span>
+							then the wash command to capture list of available wifi's with WPS option and wps version :
+							<pre><code>wash -i < interface name > </code></pre>
+							<span class="image main"><img src="images/wash.jpg" alt="" /></span>
+							Our testing target would the "Home" network which is (surprisingly) my home network , as we can see in the output of wash it's on channel 4, it has WPS on and version 2.0.
+							<br>So to run pixi dust attack with reaver the command would be :
+							<pre><code>reaver -c 4 -i wlan -b < mac address of target AP > -Z -vv  </code></pre>
+							<br>-i : for interface 
+							<br>-c 4: to set interface channel to 4 (look at wash output to )
+							<br>-b : for bssid or mac address of target access point 
+							<br>-Z : to run pixi dust attack to try and crack wps pin offline 
+							<br>-vv to set verbosity level to 2 
+							<br> the output should look something like this:
+							<span class="image main"><img src="images/reaver_pixi.jpg" alt="" /></span>
+							as you can see the attack failed , there are multiple reason for pixiwps to fail , it doesn't always mean that the router isn't vulnerable , for instance in my case i think the main reason is the chipset of the wireless interface am using which is ralink old not very known network adapter,
+							there might be other reasons but troubleshooting this problem will take another blog on it's own but , so let's get to the enxt method which is online bruteforcing of wps .
+						</p>
+						<h3>WPS pin bruteforce</h3>
+						<p>
+							reaver can also try to bruteforce wps pin online the command is pretty straightforward it's the same command without the -Z flag so it will try a list of pins:
+							 <pre><code>reaver -c 4 -i wlan -b 74:xx:xx:xx:xx:xx -vv</code></pre>
+							 BUT the caveat is most routers will lock you out after certain number (usually 3) failed attempts, it is not recommanded to try online bruteforcing attacks unless everything else failed, it's noisy and it will get you locked out,
+							 <br> you can try changing your mac address every few requests, you can try and flood the router so u force restart it , but most if not all of these attacks will fail nowadays but again , if you really must and have no other option than online bruteforcing then go for it.
+						</p>
+						<p>
+							A better way of cracking tho , is offline cracking of captured 4 way handshake (again old way ) or PMKID hash (the new way (August 2018)). 
+						</p>
+
+						<h2 id="WPA">WPA / WPA2 brute forcing</h2>
+						<p>
+							The old way of cracking WPA is bruteforcing captured 4 way handshake , doesn't hurt to know it but capturing the PMKID is better , faster and less noisy. 
+							
+						</p>
+						<h4>WPA/WPA2 handshake bruteforce (deprecated)</h4>
+						<p>
+							We will be using up date tools for an old attack tho.
+							<br> Again we need our network adapter in monitor mode :
+							<pre><code>airmon-ng start < wlan interface > </code></pre>
+							<span class="image main"><img src="images/airmon.jpg" alt="" /></span>
+							we can also use wash command to get list of available wifi's i like to use it , simple straightforward, but this time we add the flag -a to show all wifis not only those with wps enabled.
+							<pre><code>wash -i wlan -a</code></pre>
+							<span class="image main"><img src="images/wash-a.jpg" alt="" /></span>
+							as you can see even wifi's without wps, and wifis with hidden SSID are shown , again our target is "Home" router.
+							<br>So we need to start airodump-ng to start capturing for that wifi in hopes of capturing the 4 way handshake.
+							<pre><code>airodump-ng -c X --bssid 17:xx:xx:xx:xx:xx -w output_name interface_name</code></pre>
+							then after enough time when a device connects in you will capture the handshake, a way to make this faster is to deauthenticate an already connected device,
+							<pre><code>sudo aireplay-ng -0 1 -a 74:xx:xx:xx:xx:xx -c 02:xx:xx:xx:xx:xx wlan</code></pre>
+							-0 for death attack 
+							<br> 1 to specify number of time to send the death patcket
+							<br> -a : access point mac address 
+							<br> -c : the client to disconnect mac address, get it from the "STATIONS" list in airodump output .
+							<span class="image main"><img src="images/handshake_death.jpg" alt="" /></span>
+							you can now use aircrack-ng to crack the capture output file HOME_psk-01.cap :
+							<pre><code>aircrack-ng -w password.lst -b 74:xx:xx:xx:xx:xx HOME_psk-01.cap</code></pre>
+							<br>i prefer using hashcat on my main machine not inside a VM so i can use the full power of the GPU , so it is possible also to convert the captured file to hashcat compatible format either with cap2hccapx or use on of the many online convertting tool for exemple <a href="https://www.onlinehashcrack.com/tools-cap-to-hccapx-converter.php">https://www.onlinehashcrack.com/tools-cap-to-hccapx-converter.php</a>
+							<br> then use the file with hashcat with the mode -m 2500 (deprecated in newer version no longer work).
+						</p>
+						<p>A better and faster way would be to use capture the PMKID hash and crack it in hashcat using the new mode -m 22000. </p>
+						<h4>WPA/WPA2 PMKID hash bruteforce</h4>
+						<p>
+							for this the tool hcxdumptool will do the work for us we don't need to set interface to monitor mode manually ,you just need to kill the interfering processes: networkmanager process and wpa_supplicant
+							<pre><code>sudo kill PID PID</code></pre>
+							or 
+							<pre><code>sudo systemctl stop NetworkManager
+sudo systemctl stop wpa_supplicant</code></pre>
+							to filter for one wifi specifically you can add the access point mac address without colons so like so 
+							<pre><code>echo 17xxxxxxxx > target.txt </code></pre>
+							<pre><code>hcxdumptool -i wlan -o output_hc_PMKID --enable_status=1 --filterlist_ap=target.txt --filtermode=2</code></pre>
+							then after few seconds PMKID is captured , no need to deauth any client ,in fact in this case there was no client connected to the AP:
+							<span class="image main"><img src="images/PMKID_captured.jpg" alt="" /></span>
+							then we use hcxpcapngtool to create the final file with the hash to feed to hashcat:
+							<pre><code>hcxpcapngtool captured_file -o output_file</code></pre>
+							<span class="image main"><img src="images/PMKID_to_hashcat.jpg" alt="" /></span>
+							you can check SSID of access point using the captured PMKID exemple:
+							<pre><code>whoismac -p WPA*01*a8e2985045a4f802c6342f61fff43d5b*74dada582af8*028cdfb6c9a0*486f6d65***</code></pre>
+							<span class="image main"><img src="images/whoismac.jpg" alt="" /></span>
+							Then transfer to output file of PMKID over to the cracking machine in my case to the host machine to use the full power of the GPU then run the command in powershell :
+							<pre><code>.\hashcat.exe -m 22000 .\captured\pmkid_home .\wordlist\small_list.txt</code></pre>
+							using a password list that actually containt the password, if your passwordlist or ur bruteforcing rules are on point or your lucky and the password is weak enough to be bruteforced fast you should see the same:
+							<span class="image main"><img src="images/cracked.jpg" alt="" /></span>
+						</p>
+						<p>
+							note: you can be creative in case hcxdumptool is very slow or didn't capture PMKID for some reason , you can always use airodump-ng , capturing 4 way handshake typically will guarantee that u have PMKID hash , then use hcxpcapngtool to create a file with PMKID as usual from the .cap file you got in airodump-ng, then crack it hashcat.
+						</p>
+					</div>
+
+				<!-- Footer -->
+					<footer id="footer">
+						<div class="inner">
+							<section>
+								<!--
+								<h2>Get in touch</h2>
+
+								 dont send me anything :') 
+								 
+								<form method="post" action="#">
+									<div class="fields">
+										<div class="field half">
+											<input type="text" name="name" id="name" placeholder="Name" />
+										</div>
+										<div class="field half">
+											<input type="email" name="email" id="email" placeholder="Email" />
+										</div>
+										<div class="field">
+											<textarea name="message" id="message" placeholder="Message"></textarea>
+										</div>
+									</div>
+									<ul class="actions">
+										<li><input type="submit" value="Send" class="primary" /></li>
+									</ul>
+								</form>
+								!-->
+							</section>
+							<section>
+								<h2>Follow</h2>
+								<ul class="icons">
+									<li><a href="https://twitter.com/Dr_whoami_" class="icon brands style2 fa-twitter"><span class="label">Twitter</span></a></li>
+									<li><a href="https://github.com/khraoverflow" class="icon brands style2 fa-github"><span class="label">GitHub</span></a></li>
+									<li><a href="https://github.com/thou-mayest" class="icon brands style2 fa-github"><span class="label">GitHub</span></a></li>
+									
+								</ul>
+							</section>
+							<ul class="copyright">
+								<li>&copy; Untitled. All rights reserved</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+							</ul>
+						</div>
+					</footer>
+
+			</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>

@@ -145,8 +145,8 @@ input, select, textarea {
 		-ms-transition: border-bottom-color 0.2s ease, color 0.2s ease;
 		transition: border-bottom-color 0.2s ease, color 0.2s ease;
 		text-decoration: none;
-		color: #fca7a7;
-		border-bottom: dotted 1px rgba(161, 161, 161, 0.5);
+		color: #f9bfbf;
+		border-bottom: dotted 1px rgba(249, 43, 43, 0.5);
 	}
 
 		a:hover {
@@ -2331,21 +2331,6 @@ input, select, textarea {
 				width: 100%;
 			}
 
-		.image.center {
-			max-width: 60%;
-		}
-
-		.image.center img {
-			width: 100%;
-		}
-		
-		.image.center {
-			display: block;
-			margin: 3rem auto;
-			width: 100%;
-		}
-
-
 		.image.left {
 			float: left;
 			padding: 0 1.5em 1em 0;
@@ -2357,8 +2342,6 @@ input, select, textarea {
 			padding: 0 0 1em 1.5em;
 			top: 0.25em;
 		}
-
-		
 
 		.image.fit {
 			display: block;
@@ -2373,20 +2356,10 @@ input, select, textarea {
 			.image.main {
 				display: block;
 				margin: 3rem auto;
-				width: 100%;
+				width: 70%;
 			}
 
 			.image.main img {
-				width: 100%;
-			}
-
-			.image.medium {
-				display: block;
-				margin: 3rem auto;
-				width: 60%;
-				text-align: center;
-			}
-			.image.imp-medium img {
 				width: 100%;
 			}
 
@@ -2395,7 +2368,6 @@ input, select, textarea {
 				.image.main {
 					margin: 0 0 2em 0;
 				}
-
 
 			}
 
