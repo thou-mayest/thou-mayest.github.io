@@ -133,10 +133,10 @@
 							<span class="image main"><img src="images/handshake_death.jpg" alt="" /></span>
 							you can now use aircrack-ng to crack the capture output file HOME_psk-01.cap :
 							<pre><code>aircrack-ng -w password.lst -b 74:xx:xx:xx:xx:xx HOME_psk-01.cap</code></pre>
-							<br>i prefer using hashcat on my main machine not inside a VM so i can use the full power of the GPU , so it is possible also to convert the captured file to hashcat compatible format either with cap2hccapx or use on of the many online convertting tool for exemple <a href="https://www.onlinehashcrack.com/tools-cap-to-hccapx-converter.php">https://www.onlinehashcrack.com/tools-cap-to-hccapx-converter.php</a>
+							<br>i prefer using hashcat on my main machine not inside a VM so i can use the full power of the GPU , so it is possible also to convert the captured file to hashcat compatible format either with cap2hccapx or use one of the many online convertting tool for exemple <a href="https://www.onlinehashcrack.com/tools-cap-to-hccapx-converter.php">https://www.onlinehashcrack.com/tools-cap-to-hccapx-converter.php</a>
 							<br> then use the file with hashcat with the mode -m 2500 (deprecated in newer version no longer work).
 						</p>
-						<p>A better and faster way would be to use capture the PMKID hash and crack it in hashcat using the new mode -m 22000. </p>
+						<p>A better and faster way would be to capture the PMKID hash and crack it in hashcat using the new mode -m 22000. </p>
 						<h4 id="PMKID">WPA/WPA2 PMKID hash bruteforce</h4>
 						<p>
 							for this the tool hcxdumptool will do the work for us we don't need to set interface to monitor mode manually ,you just need to kill the interfering processes: networkmanager process and wpa_supplicant
@@ -153,15 +153,15 @@ sudo systemctl stop wpa_supplicant</code></pre>
 							<pre><code>hcxpcapngtool captured_file -o output_file</code></pre>
 							<span class="image main"><img src="images/PMKID_to_hashcat.jpg" alt="" /></span>
 							you can check SSID of access point using the captured PMKID exemple:
-							<pre><code>whoismac -p WPA*01*a8e2985045a4f802c6342f61fff43d5b*74dada582af8*028cdfb6c9a0*486f6d65***</code></pre>
+							<pre><code>whoismac -p WPA*01*a8exxxxxx5a4f802c6342f61fff43d5b*74xxxxxx2af8*02xxxxxxc9a0*48xxxx65***</code></pre>
 							<span class="image main"><img src="images/whoismac.jpg" alt="" /></span>
-							Then transfer to output file of PMKID over to the cracking machine in my case to the host machine to use the full power of the GPU then run the command in powershell :
+							Then transfer the output file of PMKID over to the cracking machine in my case to the host machine to use the full power of the GPU then run the command in powershell :
 							<pre><code>.\hashcat.exe -m 22000 .\captured\pmkid_home .\wordlist\small_list.txt</code></pre>
 							using a password list that actually containt the password, if your passwordlist or ur bruteforcing rules are on point or your lucky and the password is weak enough to be bruteforced fast you should see the same:
 							<span class="image main"><img src="images/cracked.jpg" alt="" /></span>
 						</p>
 						<p>
-							note: you can be creative in case hcxdumptool is very slow or didn't capture PMKID for some reason , you can always use airodump-ng , capturing 4 way handshake typically will guarantee that u have PMKID hash , then use hcxpcapngtool to create a file with PMKID as usual from the .cap file you got in airodump-ng, then crack it hashcat.
+							note: you can be creative in case hcxdumptool is very slow or didn't capture PMKID for some reason , you can always use airodump-ng , capturing 4 way handshake typically will guarantee that u have PMKID hash , then use hcxpcapngtool to create a file with PMKID as usual from the .cap file you got in airodump-ng, then crack it in hashcat.
 						</p>
 					</div>
 
