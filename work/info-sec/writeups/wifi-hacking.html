@@ -109,9 +109,10 @@
 						<h2 id="WPA">WPA / WPA2 brute forcing</h2>
 						<p>
 							The old way of cracking WPA is bruteforcing captured 4 way handshake , doesn't hurt to know it but capturing the PMKID is better , faster and less noisy. 
-							
+							<br> - <a href="#handshake">4 way handshake capture and bruteforce</a>
+							<br> - <a href="#PMKID">PMKID capture and bruteforce </a>
 						</p>
-						<h4>WPA/WPA2 handshake bruteforce (deprecated)</h4>
+						<h4 id="handshake">WPA/WPA2 handshake bruteforce (deprecated)</h4>
 						<p>
 							We will be using up date tools for an old attack tho.
 							<br> Again we need our network adapter in monitor mode :
@@ -136,7 +137,7 @@
 							<br> then use the file with hashcat with the mode -m 2500 (deprecated in newer version no longer work).
 						</p>
 						<p>A better and faster way would be to use capture the PMKID hash and crack it in hashcat using the new mode -m 22000. </p>
-						<h4>WPA/WPA2 PMKID hash bruteforce</h4>
+						<h4 id="PMKID">WPA/WPA2 PMKID hash bruteforce</h4>
 						<p>
 							for this the tool hcxdumptool will do the work for us we don't need to set interface to monitor mode manually ,you just need to kill the interfering processes: networkmanager process and wpa_supplicant
 							<pre><code>sudo kill PID PID</code></pre>
