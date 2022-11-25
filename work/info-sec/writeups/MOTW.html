@@ -56,12 +56,13 @@
 							
 							<p>Lately microsoft took the decision to block macros of files coming from the internet,by default, as it's one of the most common ways threat actors tend to distribute malware ,</p>
 							<p>To do so windows and microsoft office products rely on the presence of "Mark Of The Web" on files to identify it's origin and ultimately decide to trust the file or not , and expectedly, after this decision threat actors started looking for bypasses for MOTW. </p>
-							<a href="#MOTW">What is mark of the web</a>
+							<p>In this article i'll go through the following:
+							<br><a href="#MOTW">What is mark of the web</a>
 							<br><a href="#winrar">winRAR decision, bypass and fix</a>
-							<br><a>Other bypasses</a>
+							<br><a href="#others">Other bypasses</a>
 							<br><a>Takeaway and how to protect yourself</a>
-							<br>
-							<br>
+							</p>
+							
 							<br>
 						<h2 id="MOTW">Mark Of The Web ?</h2>
 						<span class="image left"><img src="images/motw.png"/></span>
@@ -76,7 +77,7 @@
 						<br>
 						<br>
 
-						<p>So technically according to microsoft it's just an ADS (alternate data stream ) which is an NTFS feature in windows where u can append data to a file ,
+						<p>So technically according to microsoft it's just an ADS (alternate data stream ) which is an NTFS feature in windows where u can basically add or append data to a file ,
 							<br>for instance in this case an alternate data stream with the name Zone.Identifier is set to define the origin of the file , the "ZoneId" defines if the zone is "trusted" or not , according to microsoft: id of 3 means the file comes from the internet , id = 4 means the file comes from Restricted sites .
 							<br> The content of this ADS should look usually like this:
 <pre><code>[ZoneTransfer]
@@ -97,10 +98,16 @@ ZoneId=3</code></pre>
 						<pre><code>.\Rar.exe a -os poc_os.rar .\poc.doc</code></pre> 
 						<br> now we tag the archive file with mark of the web simulating the case of it being sent over email attachement for exemple, we do that again with the same command:
 					<pre><code>Set-Content -Path '.\poc_os.rar' -Stream Zone.Identifier -Value '[ZoneTransfer]','ZoneId=3'</code></pre> 
-						Now what we will notice when we open the archived file is that it is not tagged with MOTW word document opens normally and macros can be enabled , winrar apparently overwrites Zone.Identifier while trying to preserve NTFS streams
+						Now what we will notice when we open the archived file is that it is not tagged with MOTW word document opens normally and macros can be enabled , winrar apparently overwrites Zone.Identifier while trying to preserve NTFS streams.
 						<br>I contacted them regarding this conflict and they fixed the issue in version 6.20 beta 2 , currently it will ignore the archived Zone.Identifier stream if the host archive has MOTW set to ZoneId=3 or 4 , (internet, and Restricted sites respectively)  </p>
-
-						</div>
+					<h2 id="other-bypasses">Other ways to bypass MOTW:</h2>
+					<p>Among the multiple ways currently observed in the wild to bypass MOTW, we find the use the .ISO, VHD, IMG,... 
+						<br>Files such as ISO containers don't support NTFS, which means won't can't have ADS which in turn means no MOTW tag for files extracted from them , 
+						<br>Although officially microsoft patched this bypass in November Patch Tuesday , as of now , ISO files do propagate MOTW to files contained inside them .
+					</p>	
+					<p>CVE-2022-41049: a mark of the web bypass in explorer.exe, failing to propagate MOTW to files contained in zip archives if files are read only which caused to process to fail with acces denied while trying to append MOTW stream to the file. </p>
+					<p>Other 0-days are also observed in the wild such as malformed signature on .js files that cause windows smart screen to fail and execute the file instead of showing the blocking warning.</p>	
+				</div>
 						<br>
 						
 					</div>
