@@ -1,0 +1,160 @@
+<!DOCTYPE HTML>
+<!--
+	Phantom by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Mark Of The Web</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Header -->
+					<header id="header">
+						<div class="inner">
+
+							<!-- Logo -->
+								<a href="/work/info-sec/" class="logo">
+									<span class="symbol"><img src="images/logo.svg" alt="" /></span><span class="title">HOME</span>
+								</a>
+
+							<!-- Nav 
+								<nav>
+									<ul>
+										<li><a href="#menu">Menu</a></li>
+									</ul>
+								</nav>
+
+						</div>
+					</header>
+					-->
+
+				<!-- Menu 
+					<nav id="menu">
+						<h2>Menu</h2>
+						<ul>
+							<li><a href="index.html">Home</a></li>
+							<li><a href="generic.html">Ipsum veroeros</a></li>
+							<li><a href="generic.html">Tempus etiam</a></li>
+							<li><a href="generic.html">Consequat dolor</a></li>
+							<li><a href="elements.html">Elements</a></li>
+						</ul>
+					</nav>
+				-->
+				<!-- Main -->
+					<div id="main">
+						<div class="inner">
+							<h1>Exploring MOTW nature, WinRAR and other bypasses, risks and mitigations</h1>
+							<span class="image main"><img src="images/word_decision.png" alt="" /></span>
+							
+							<p>Lately microsoft took the decision to block macros of files coming from the internet,by default, as it's one of the most common ways threat actors tend to distribute malware ,</p>
+							<p>To do so windows and microsoft office products rely on the presence of "Mark Of The Web" on files to identify it's origin and ultimately decide to trust the file or not , and expectedly, after this decision threat actors started looking for bypasses for MOTW. </p>
+							<a href="#MOTW">What is mark of the web</a>
+							<br><a href="#winrar">winRAR decision, bypass and fix</a>
+							<br><a>Other bypasses</a>
+							<br><a>Takeaway and how to protect yourself</a>
+							<br>
+							<br>
+							<br>
+						<h2 id="MOTW">Mark Of The Web ?</h2>
+						<span class="image left"><img src="images/motw.png"/></span>
+						<br>
+						<p> When you try opening executables from the internet windows smart screen blocks the file with a popup and a prompt to run anyway or not , 
+							<br>this happens because the file have MOTW tag set , 
+						<br> a similar behaviour with script files like javascript , vbs and so on :
+						</p>
+						<p>According to microsoft "Mark of the Web is added by Windows to files from an untrusted location, such as the internet or Restricted Zone" see <a href="https://learn.microsoft.com/en-us/deployoffice/security/internet-macros-blocked#mark-of-the-web-and-zones"> (MOTW And zones)</a></p>
+						<br>
+						<br>
+						<br>
+						<br>
+
+						<p>So technically according to microsoft it's just an ADS (alternate data stream ) which is an NTFS feature in windows where u can append data to a file ,
+							<br>for instance in this case an alternate data stream with the name Zone.Identifier is set to define the origin of the file , the "ZoneId" defines if the zone is "trusted" or not , according to microsoft: id of 3 means the file comes from the internet , id = 4 means the file comes from Restricted sites .
+							<br> The content of this ADS should look usually like this:
+<pre><code>[ZoneTransfer]
+ZoneId=3</code></pre>
+						<br> You can set this for testing with powershell command: 
+						</p>
+						<pre><code>Set-Content -Path '.\TEST.docx' -Stream Zone.Identifier -Value '[ZoneTransfer]','ZoneId=3'</code></pre>
+						<p>This will set the zone id to 3 which means internet , so the file is untrusted, for word documents this means the file will be blocked by default and the old option of enabling macros with one click will not be there anymore instead this is the new message: <a href="https://learn.microsoft.com/en-us/deployoffice/security/internet-macros-blocked#how-office-determines-whether-to-run-macros-in-files-from-the-internet">(see more)</a> </p>
+						<span class="image main"><img src="images/word_blocked.png"></img></span>
+						<p>Now that we know what is it and how it works lets look at how red teamers (or hopefully not threat actors) might go about bypassing it.</p>
+						<h2 id="winrar">WinRAR decision and bypass</h2>
+						<p>Most archiver software , at the moment, don't support MOTW propagation or the support is far from perfect ,
+							<br> it makes sense to look at winrar first at it's by far the most popular , it seemed that winrar took the decision to <a href="https://github.com/nmantani/archiver-MOTW-support-comparison/issues/1">roll back it's support for MOTW propagation to all types of files except microsoft office files</a>, this was due to problems that happened in some installers.
+						<br>But as i said the current implementation is far from perfect and archivers are not yet taking this feature seriously, so i tried to find a way to bypass MOTW with winrar for microsft office files. 
+					 	<br>Since we know that MOTW is nothing but ADS , which is an NTFS option, a feature in winrar caught my attention, preserving NTFS streams, this means it could preserve MOTW , so what if i create a malformed stream will it be preserved or interfere with the process of propagating and applying the actual MOTW ?
+						<br><pre><code>Set-Content -Path '.\poc.doc' -Stream Zone.Identifier -Value 'malformed or empty'</code></pre> 
+						with that command we create a malformed stream named Zone.Identifier , then we create a .rar archive and tell winrar to preserve NTFS streams , this can be done with the GUI in the advanced options, or with Rar.exe cli tool:
+						<pre><code>.\Rar.exe a -os poc_os.rar .\poc.doc</code></pre> 
+						<br> now we tag the archive file with mark of the web simulating the case of it being sent over email attachement for exemple, we do that again with the same command:
+					<pre><code>Set-Content -Path '.\poc_os.rar' -Stream Zone.Identifier -Value '[ZoneTransfer]','ZoneId=3'</code></pre> 
+						Now what we will notice when we open the archived file is that it is not tagged with MOTW word document opens normally and macros can be enabled , winrar apparently overwrites Zone.Identifier while trying to preserve NTFS streams
+						<br>I contacted them regarding this conflict and they fixed the issue in version 6.20 beta 2 , currently it will ignore the archived Zone.Identifier stream if the host archive has MOTW set to ZoneId=3 or 4 , (internet, and Restricted sites respectively)  </p>
+
+						</div>
+						<br>
+						
+					</div>
+
+				<!-- Footer -->
+					<footer id="footer">
+						<div class="inner">
+							<section>
+								<!--
+								<h2>Get in touch</h2>
+
+								 dont send me anything :') 
+								 
+								<form method="post" action="#">
+									<div class="fields">
+										<div class="field half">
+											<input type="text" name="name" id="name" placeholder="Name" />
+										</div>
+										<div class="field half">
+											<input type="email" name="email" id="email" placeholder="Email" />
+										</div>
+										<div class="field">
+											<textarea name="message" id="message" placeholder="Message"></textarea>
+										</div>
+									</div>
+									<ul class="actions">
+										<li><input type="submit" value="Send" class="primary" /></li>
+									</ul>
+								</form>
+								!-->
+							</section>
+							<section>
+								<h2>Follow</h2>
+								<ul class="icons">
+									<li><a href="https://twitter.com/Dr_whoami_" class="icon brands style2 fa-twitter"><span class="label">Twitter</span></a></li>
+									<li><a href="https://github.com/khraoverflow" class="icon brands style2 fa-github"><span class="label">GitHub</span></a></li>
+									<li><a href="https://github.com/thou-mayest" class="icon brands style2 fa-github"><span class="label">GitHub</span></a></li>
+									
+								</ul>
+							</section>
+							<ul class="copyright">
+								<li>&copy; Untitled. All rights reserved</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+							</ul>
+						</div>
+					</footer>
+
+			</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
