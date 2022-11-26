@@ -51,16 +51,16 @@
 				<!-- Main -->
 					<div id="main">
 						<div class="inner">
-							<h1>Exploring MOTW nature, WinRAR and other bypasses, risks and mitigations</h1>
+							<h1> MOTW for red and blue teamers </h1>
 							<span class="image main"><img src="images/word_decision.png" alt="" /></span>
 							
 							<p>Lately microsoft took the decision to block macros of files coming from the internet,by default, as it's one of the most common ways threat actors tend to distribute malware ,</p>
 							<p>To do so windows and microsoft office products rely on the presence of "Mark Of The Web" on files to identify it's origin and ultimately decide to trust the file or not , and expectedly, after this decision threat actors started looking for bypasses for MOTW. </p>
-							<p>In this article i'll go through the following:
-							<br><a href="#MOTW">What is mark of the web</a>
+							<p>In this article i'll go through explaining MOTW, and ways to bypass it, which should be helpfull from both point of views of red teamers, and blue teamers:
+							<br><a href="#MOTW">What is mark of the web, nature and how it works</a>
 							<br><a href="#winrar">winRAR decision, bypass and fix</a>
 							<br><a href="#other-bypasses">Other bypasses</a>
-							<br><a href="Conclusion">Takeaway and how to protect yourself</a>
+							<br><a href="#Conclusion">Takeaway and how to protect yourself</a>
 							</p>
 							
 							<br>
@@ -96,18 +96,26 @@ ZoneId=3</code></pre>
 						<br><pre><code>Set-Content -Path '.\poc.doc' -Stream Zone.Identifier -Value 'malformed or empty'</code></pre> 
 						with that command we create a malformed stream named Zone.Identifier , then we create a .rar archive and tell winrar to preserve NTFS streams , this can be done with the GUI in the advanced options, or with Rar.exe cli tool:
 						<pre><code>.\Rar.exe a -os poc_os.rar .\poc.doc</code></pre> 
-						<br> now we tag the archive file with mark of the web simulating the case of it being sent over email attachement for exemple, we do that again with the same command:
+						<br> now we tag the archive file with mark of the web simulating the case of it being sent over email attachement for example, we do that again with the same command used before:
 					<pre><code>Set-Content -Path '.\poc_os.rar' -Stream Zone.Identifier -Value '[ZoneTransfer]','ZoneId=3'</code></pre> 
 						Now what we will notice when we open the archived file is that it is not tagged with MOTW word document opens normally and macros can be enabled , winrar apparently overwrites Zone.Identifier while trying to preserve NTFS streams.
-						<br>I contacted them regarding this conflict and they fixed the issue in version 6.20 beta 2 , currently it will ignore the archived Zone.Identifier stream if the host archive has MOTW set to ZoneId=3 or 4 , (internet, and Restricted sites respectively)  </p>
-					<h2 id="other-bypasses">Other ways to bypass MOTW:</h2>
-					<p>Among the multiple ways currently observed in the wild to bypass MOTW, we find the use the .ISO, VHD, IMG,... 
-						<br>Files such as ISO containers don't support NTFS, which means won't can't have ADS which in turn means no MOTW tag for files extracted from them , 
+						<br>Worth noting , for stealthier option if you realy want blueteam to have a little bit harder time finding out the root cause of the issue you can set the following Zone.Identifier :
+<pre><code>[ZoneTransfer]
+ZoneId=2</code></pre>
+						<br>Setting the ZoneId to a value less than 3 , as mentioned before, means the file will not be blocked by default and macros can still be enabled since the file is trusted, and you don't have to set it to an empty or malformed stream .
+						<br>I contacted winrar regarding this conflict and they fixed the issue in version 6.20 beta 2 , currently it will ignore the archived Zone.Identifier stream if the host archive has MOTW set to ZoneId=3 or 4 , (internet, and Restricted sites respectively)  </p>
+					<h2 id="other-bypasses">Other ways to bypass MOTW :</h2>
+					<p>As a red teamer, bypassing MOTW might be crucial for initial access using office documents and macros, these are few ways you can bypass MOTW ,Among them, multiple are currently observed in the wild, like the use of these files : .ISO, VHD, IMG,... 
+						<br>Files such as ISO containers don't support NTFS, which means it can't have ADS which in turn means no MOTW tag for files extracted from them , 
 						<br>Although officially microsoft patched this bypass in November Patch Tuesday , as of now , ISO files do propagate MOTW to files contained inside them .
 					</p>	
-					<p>CVE-2022-41049: a mark of the web bypass in explorer.exe, failing to propagate MOTW to files contained in zip archives if files are read only which caused to process to fail with acces denied while trying to append MOTW stream to the file. </p>
+					<p>CVE-2022-41049: a mark of the web bypass in explorer.exe, failing to propagate MOTW to files contained in zip archives, the bug happens when files are read only which causes the process to fail with acces denied while trying to append MOTW stream to the file. </p>
 					<p>Other 0-days are also observed in the wild such as malformed signature on .js files that cause windows smart screen to fail and execute the file instead of showing the blocking warning.</p>	
+					<p>The use of archive files is also a good option , currently there is few examples in the wild where .rar files are being used , and i suppose it will spike in the near future as other ways are being mitigated, to track archivers software behaviour and support of MOTW , here's <a href="https://github.com/nmantani/archiver-MOTW-support-comparison">a good repository </a>.</p>
 					<h2 id="Conclusion">Conclusion and ways to protect yourself : </h2>
+					<p>It's important to mention that it seems that MOTW feature is not mature enough, and it looks like many ways to bypass it currently popped up in a short period of time , even tho it's getting more important especially after microsoft decision to block macros, but nonetheless "coconut security, where u have one hard shell then everything inside is unsecure, can never end well" - sun tzu, so relying on MOTW only is not a good idea good monitoring of macros anyway is still important.
+					<br>As most archivers don't , or lack the support of MOTW , it is important to deal with these files with more care,  the repository mentioned before is usefull in keeping track of these software decisions and changes. 
+					<br>Altho the number one most obvious thing to state is , keeping software and the OS up to date , but most importantly , informing the end user about security risks related to macros, phishing , and best practices in dealilng with internet incoming files in general.</p>
 				</div>
 						<br>
 						
