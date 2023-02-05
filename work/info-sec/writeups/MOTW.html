@@ -103,7 +103,9 @@ ZoneId=3</code></pre>
 <pre><code>[ZoneTransfer]
 ZoneId=2</code></pre>
 						<br>Setting the ZoneId to a value less than 3 , as mentioned before, means the file will not be blocked by default and macros can still be enabled since the file is trusted, and you don't have to set it to an empty or malformed stream .
-						<br>I contacted winrar regarding this conflict and they fixed the issue in version 6.20 beta 2 , currently it will ignore the archived Zone.Identifier stream if the host archive has MOTW set to ZoneId=3 or 4 , (internet, and Restricted sites respectively)  </p>
+						<br>I contacted winrar regarding this conflict and they fixed the issue in version 6.20 beta 2, and acknowledged my contribution in beta 3 in WhatsNew.txt :  <a href="https://www.rarlab.com/rar/winrar-x64-620b3.exe">https://www.rarlab.com/rar/winrar-x64-620b3.exe</a>
+						<span class="image main"><img src="images/rar_whatsnew.jpg" alt="" /></span>
+						<br> Currently it will ignore the archived Zone.Identifier stream if the host archive has MOTW set to ZoneId=3 or 4 , (internet, and Restricted sites respectively), but as Eugene Roshal stated to me his hesitation about implementing MOTW support and that "Concrete implementation might be still changed".   </p>
 					<h2 id="other-bypasses">Other ways to bypass MOTW :</h2>
 					<p>As a red teamer, bypassing MOTW might be crucial for initial access using office documents and macros, these are few ways you can bypass MOTW ,Among them, multiple are currently observed in the wild, like the use of these files : .ISO, VHD, IMG,... 
 						<br>Files such as ISO containers don't support NTFS, which means it can't have ADS which in turn means no MOTW tag for files extracted from them , 
