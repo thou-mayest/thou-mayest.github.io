@@ -1,0 +1,131 @@
+<!DOCTYPE HTML>
+<!--
+	Phantom by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Covenant tasks modification</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Header -->
+					<header id="header">
+						<div class="inner">
+
+							<!-- Logo -->
+								<a href="/work/info-sec/" class="logo">
+									<span class="symbol"><img src="images/logo.svg" alt="" /></span><span class="title">HOME</span>
+								</a>
+
+							<!-- Nav 
+								<nav>
+									<ul>
+										<li><a href="#menu">Menu</a></li>
+									</ul>
+								</nav>
+
+						</div>
+					</header>
+					-->
+
+				<!-- Menu 
+					<nav id="menu">
+						<h2>Menu</h2>
+						<ul>
+							<li><a href="index.html">Home</a></li>
+							<li><a href="generic.html">Ipsum veroeros</a></li>
+							<li><a href="generic.html">Tempus etiam</a></li>
+							<li><a href="generic.html">Consequat dolor</a></li>
+							<li><a href="elements.html">Elements</a></li>
+						</ul>
+					</nav>
+				-->
+				<!-- Main -->
+					<div id="main">
+						<div class="inner">
+							<h1>Covenant Compiled tasks</h1>
+							<span class="image main"><img src="images/covenant.png" alt="" /></span>
+							<p>While trying to update some of covenants submodules, namely rubeus, to latest version , i was faced with few problems, with latest version that , that refused to compile with covenant's roslyn compiler.
+                                <br>If you're facing the same problem , long story short , disable optimization by Modify line 212 from Covenant/Covenant/Models/Grunts/GruntTask.cs , refer to this <a href="https://avantguard.io/en/blog/how-to-update-rubeus-in-covenant">blog post</a> for detailed guide.</p>
+                                <p>But before i knew that ,i resorted to a quick and dirty way to add or modify tasks, which also resolved the problem of rubeus having two different versions now , one for .NET 3.5 and one for .NET 4.0 
+                                <br>And so this blog post will be a brief high level guide on how to add compiled tasks , since i didn't see anyone talk about this way of adding tasks that might be a bit faster and easier to and saves debugging time in case some wierd compilation error happens.
+                                <h2>Adding compiled tasks:</h2>
+                                <br>i will take rubeus as an example ,but this should work for any other .NET project , so first create the task (or modifying if existing ) to include this line :
+                                <span class="image main"><img src="images/Compiled_true.png" alt=""></span>
+                                <br>for rubeus task this line is in GhostPack.yaml, this will tell covenant to not recompile the task again from source code each time you run the task , cool feature prob was made first for debugging and now it comes to the rescue.
+                                <br>Next we need to compile rubeus , after adding a class tha contains the actual task code to the source code :
+                                <span class="image main"><img src="images/rubeus.png" alt=""></span>
+                                then we simply compile for .NET 4.0 for now ,then take the compiled Rubeus.exe and use this <a href="https://github.com/khraoverflow/random-scripts/blob/master/compress-tasks.ps1">powershell script</a>  i made to compress the file and output the Rubeus.compiled file:
+                                <span class="image main"><img src="images/rubeus-compress.png" alt=""></span>
+                                it's important that the name is Rubeus.compiled (Task name case sensitive +".compiled")
+                                <br>We then copy the result file in "Covenant\Data\Tasks\CSharp\Compiled\net40" and simply run the task and voila:
+                                <span class="image main"><img src="images/rubeus-running.png" alt=""></span>
+                                latest version running , now the coolest part, we do the same steps but with rubeus last .NET 3.5 release <a href="https://github.com/GhostPack/Rubeus/releases/tag/1.6.4">rubeus 1.6</a>,
+                                create the task and add to the project, compile for .NET 3.5 , compress with the powershell script , then copy the new Rubeus.compiled to "Covenant\Data\Tasks\CSharp\Compiled\net35":
+                                <span class="image main"><img src="images/rubeus-35.png" alt=""></span>
+                                And now when we run the task from a .NET 3.5 grunt u get the 1.6 version and , 2.2 version when u run from 4.0 , worth noting , obviously , if you're adding tasks this way , then you might also consider obfuscating manually since now covenant is not compiling nor obfuscating the task for you.
+                            </p>
+						</div>
+					</div>
+
+				<!-- Footer -->
+					<footer id="footer">
+						<div class="inner">
+							<section>
+								<!--
+								<h2>Get in touch</h2>
+
+								 dont send me anything :') 
+								 
+								<form method="post" action="#">
+									<div class="fields">
+										<div class="field half">
+											<input type="text" name="name" id="name" placeholder="Name" />
+										</div>
+										<div class="field half">
+											<input type="email" name="email" id="email" placeholder="Email" />
+										</div>
+										<div class="field">
+											<textarea name="message" id="message" placeholder="Message"></textarea>
+										</div>
+									</div>
+									<ul class="actions">
+										<li><input type="submit" value="Send" class="primary" /></li>
+									</ul>
+								</form>
+								!-->
+							</section>
+							<section>
+								<h2>Follow</h2>
+								<ul class="icons">
+									<li><a href="https://twitter.com/Dr_whoami_" class="icon brands style2 fa-twitter"><span class="label">Twitter</span></a></li>
+									<li><a href="https://github.com/khraoverflow" class="icon brands style2 fa-github"><span class="label">GitHub</span></a></li>
+									<li><a href="https://github.com/thou-mayest" class="icon brands style2 fa-github"><span class="label">GitHub</span></a></li>
+									
+								</ul>
+							</section>
+							<ul class="copyright">
+								<li>&copy; Untitled. All rights reserved</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+							</ul>
+						</div>
+					</footer>
+
+			</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
