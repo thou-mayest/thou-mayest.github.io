@@ -57,7 +57,7 @@
                                 <br>If you're facing the same problem , long story short , disable optimization by Modify line 212 from Covenant/Covenant/Models/Grunts/GruntTask.cs , refer to this <a href="https://avantguard.io/en/blog/how-to-update-rubeus-in-covenant">blog post</a> for detailed guide.</p>
                                 <p>But before i knew that ,i resorted to a quick and dirty way to add or modify tasks, which also resolved the problem of rubeus having two different versions now , one for .NET 3.5 and one for .NET 4.0 
                                 <br>And so this blog post will be a brief high level guide on how to add compiled tasks , since i didn't see anyone talk about this way of adding tasks that might be a bit faster and easier to and saves debugging time in case some wierd compilation error happens.
-                                <h2>Adding compiled tasks:</h2>
+                                <h1>Adding compiled tasks:</h1>
                                 <br>i will take rubeus as an example ,but this should work for any other .NET project , so first create the task (or modifying if existing ) to include this line :
                                 <span class="image main"><img src="images/Compiled_true.png" alt=""></span>
                                 <br>for rubeus task this line is in GhostPack.yaml, this will tell covenant to not recompile the task again from source code each time you run the task , cool feature prob was made first for debugging and now it comes to the rescue.
@@ -73,6 +73,11 @@
                                 <span class="image main"><img src="images/rubeus-35.png" alt=""></span>
                                 And now when we run the task from a .NET 3.5 grunt u get the 1.6 version and , 2.2 version when u run from 4.0 , worth noting , obviously , if you're adding tasks this way , then you might also consider obfuscating manually since now covenant is not compiling nor obfuscating the task for you.
                             </p>
+							<h1>My other contributions to covenant:</h1>
+							<p>
+								<a href="https://github.com/cobbr/Covenant/pull/376">My pull request to covenant</a>
+								<br><a href="https://github.com/khraoverflow/Covenant">My covenant instance</a> , most of the work is in the dev branch.
+							</p>
 						</div>
 					</div>
 
