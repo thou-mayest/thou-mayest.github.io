@@ -53,10 +53,10 @@
 						<div class="inner">
 							<h1>Covenant Compiled tasks</h1>
 							<span class="image main"><img src="images/covenant.png" alt="" /></span>
-							<p>While trying to update some of covenants submodules, namely rubeus, to latest version , i was faced with few problems, with latest version that , that refused to compile with covenant's roslyn compiler.
+							<p>While trying to update some of covenants submodules, namely rubeus, to latest version , i was faced with few problems, with latest version , that refused to compile with covenant's roslyn compiler.
                                 <br>If you're facing the same problem , long story short , disable optimization by Modify line 212 from Covenant/Covenant/Models/Grunts/GruntTask.cs , refer to this <a href="https://avantguard.io/en/blog/how-to-update-rubeus-in-covenant">blog post</a> for detailed guide.</p>
                                 <p>But before i knew that ,i resorted to a quick and dirty way to add or modify tasks, which also resolved the problem of rubeus having two different versions now , one for .NET 3.5 and one for .NET 4.0 
-                                <br>And so this blog post will be a brief high level guide on how to add compiled tasks , since i didn't see anyone talk about this way of adding tasks that might be a bit faster and easier to and saves debugging time in case some wierd compilation error happens.
+                                <br>And so this blog post will be a brief high level guide on how to add compiled tasks , since i didn't see anyone talk about this way of adding tasks that might be a bit faster and easier to do and saves debugging time in case some wierd compilation error happens.
                                 <h1>Adding compiled tasks:</h1>
                                 <br>i will take rubeus as an example ,but this should work for any other .NET project , so first create the task (or modifying if existing ) to include this line :
                                 <span class="image main"><img src="images/Compiled_true.png" alt=""></span>
