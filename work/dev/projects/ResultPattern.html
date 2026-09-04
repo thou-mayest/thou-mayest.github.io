@@ -1,0 +1,460 @@
+<!DOCTYPE HTML>
+<!--
+	Phantom by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Result pattern</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Header -->
+					<header id="header">
+						<div class="inner">
+
+							<!-- Logo -->
+								<a href="/work/dev/" class="logo">
+									<span class="symbol"><img src="images/logo.svg" alt="" /></span><span class="title">HOME</span>
+								</a>
+
+							<!-- Nav 
+								<nav>
+									<ul>
+										<li><a href="#menu">Menu</a></li>
+									</ul>
+								</nav>
+
+						</div>
+					</header>
+					-->
+
+				<!-- Menu 
+					<nav id="menu">
+						<h2>Menu</h2>
+						<ul>
+							<li><a href="index.html">Home</a></li>
+							<li><a href="generic.html">Ipsum veroeros</a></li>
+							<li><a href="generic.html">Tempus etiam</a></li>
+							<li><a href="generic.html">Consequat dolor</a></li>
+							<li><a href="elements.html">Elements</a></li>
+						</ul>
+					</nav>
+				-->
+				<!-- Main -->
+					<div id="main">
+    <div class="inner">
+        <h1>Mastering the Result Pattern in .NET: A modern Approach for a clean Error Handling</h1>
+        <span class="image main"><img src="images/ResultPattern.jpg" alt="" /></span>
+        <p>
+            Error handling is one of the most critical aspects of building robust applications. In .NET, exceptions have long been the go‑to mechanism for signalling errors, but they are not always the best tool for every job. When exceptions are used for expected, recoverable failures (like validation errors or missing resources), they can obscure the happy path, make code harder to follow, and even hurt performance.
+        </p>
+        <p>
+            Enter the <b>Result pattern</b>: a simple, explicit way to represent the outcome of an operation, whether it succeeds or fails. By returning a <code>Result</code> object, you force the caller to acknowledge both outcomes, leading to cleaner, more predictable code.
+        </p>
+        <p>
+            In this post, we’ll explore a production ready implementation, with code examples directly from this modular monolith repository: <a href="https://github.com/thou-mayest/media-platform-template" target="_blank">modulith media platform template</a> as part of the ongoing journey of documenting architectural and design decisions while building this project. </p>
+			<p>In this post, we’ll look at the Result pattern, including a rich <code>Error</code> type and seamless integration with ASP.NET Core. We’ll also look at extension methods that bridge the gap between your domain and HTTP responses, making API development faster and more robust.
+        </p>
+
+        <h1>What Is the Result Pattern?</h1>
+        <p>
+            At its core, the Result pattern replaces thrown exceptions with returned objects that clearly state:
+        </p>
+        <ul>
+            <li>Whether the operation succeeded (<code>IsSuccess</code> / <code>IsFailure</code>)</li>
+            <li>The value if successful (for <code>Result&lt;TValue&gt;</code>)</li>
+            <li>One or more errors if it failed</li>
+        </ul>
+        <p>This approach has several advantages:</p>
+        <ul>
+            <li><b>Explicit</b> – the method signature tells you that errors are possible.</li>
+            <li><b>Type‑safe</b> – the compiler forces you to check the outcome before accessing the value.</li>
+            <li><b>Composable</b> – you can chain operations and handle errors in a uniform way.</li>
+            <li><b>Performance</b> – no expensive stack unwinding for expected failures.</li>
+        </ul>
+
+        <h2>The <code>Result</code> and <code>Result&lt;TValue&gt;</code> Classes</h2>
+        <p>
+            The foundation is a pair of classes that represent a successful or failed operation. Here’s the implementation:
+			<a href="https://github.com/thou-mayest/media-platform-template/blob/main/src/SharedKernal/Results/Result.cs" target="_blank">view code</a>
+        </p>
+        <pre><code>namespace SharedKernal.Results
+{
+    public class Result
+    {
+        protected Result(bool isSuccess, Error error)
+        {
+            if (isSuccess && error != Error.None)
+                throw new InvalidOperationException("A successful result cannot contain an error.");
+            if (!isSuccess && error == Error.None)
+                throw new InvalidOperationException("A failed result must contain an error.");
+
+            IsSuccess = isSuccess;
+            Error = error;
+            Errors = error == Error.None
+                ? Array.Empty&lt;Error&gt;()
+                : new[] { error };
+        }
+
+        protected Result(bool isSuccess, IReadOnlyCollection&lt;Error&gt; errors)
+        {
+            if (isSuccess && errors.Count > 0)
+                throw new InvalidOperationException("A successful result cannot contain errors.");
+            if (!isSuccess && errors.Count == 0)
+                throw new InvalidOperationException("A failed result must contain at least one error.");
+
+            IsSuccess = isSuccess;
+            Errors = errors;
+            Error = errors.Count > 0 ? errors.First() : Error.None;
+        }
+
+        public bool IsSuccess { get; }
+        public bool IsFailure => !IsSuccess;
+        public Error Error { get; }
+        public IReadOnlyCollection&lt;Error&gt; Errors { get; }
+
+        public static Result Success() => new(true, Error.None);
+        public static Result Failure(Error error) => new(false, error);
+        public static Result Failure(IReadOnlyCollection&lt;Error&gt; errors) => new(false, errors);
+
+        public static Result&lt;TValue&gt; Success&lt;TValue&gt;(TValue value) => new(value, true, Error.None);
+        public static Result&lt;TValue&gt; Failure&lt;TValue&gt;(Error error) => new(default, false, error);
+        public static Result&lt;TValue&gt; Failure&lt;TValue&gt;(IReadOnlyCollection&lt;Error&gt; errors) => new(default, false, errors);
+
+        public static implicit operator Result(Error error) => Failure(error);
+    }
+
+    public class Result&lt;TValue&gt; : Result
+    {
+        private readonly TValue? _value;
+
+        protected internal Result(TValue? value, bool isSuccess, Error error)
+            : base(isSuccess, error)
+        {
+            _value = value;
+        }
+
+        protected internal Result(TValue? value, bool isSuccess, IReadOnlyCollection&lt;Error&gt; errors)
+            : base(isSuccess, errors)
+        {
+            _value = value;
+        }
+
+        public TValue Value => IsSuccess
+            ? _value!
+            : throw new InvalidOperationException("The value of a failed result cannot be accessed.");
+
+        public static implicit operator Result&lt;TValue&gt;(TValue value) => Success(value);
+        public static implicit operator Result&lt;TValue&gt;(Error error) => Failure&lt;TValue&gt;(error);
+    }
+}</code></pre>
+
+        <p><b>Key features:</b></p>
+        <ul>
+            <li><b>Factory methods</b> – <code>Success</code> and <code>Failure</code> create instances, making the outcome explicit.</li>
+            <li><b>Multiple errors</b> – the <code>Result</code> can hold a collection of errors, perfect for validation scenarios.</li>
+            <li><b>Guard clauses</b> – constructors enforce consistency: a success cannot have errors, and a failure must have at least one.</li>
+            <li><b>Implicit conversions</b> – returning an <code>Error</code> from a method that returns <code>Result</code> automatically creates a failure result.</li>
+        </ul>
+        <p>
+            The <code>Result&lt;TValue&gt;</code> variant adds a <code>Value</code> property that can only be accessed when <code>IsSuccess</code> is <code>true</code> – otherwise it throws. This forces callers to check the outcome before using the value.
+        </p>
+
+        <h2>Defining Errors with the <code>Error</code> Record</h2>
+        <p>
+            To give errors structure and meaning, we use a record that encapsulates a code, a message, and a type.
+			<a href="https://github.com/thou-mayest/media-platform-template/blob/main/src/SharedKernal/Results/Error.cs" target="_blank">view code</a>
+        </p>
+        <pre><code>namespace SharedKernal.Results
+{
+    public sealed record Error(string Code, string Message, ErrorType Type = ErrorType.Failure)
+    {
+        public static readonly Error None = new(string.Empty, string.Empty, ErrorType.Failure);
+
+        public static Error Validation(string code, string message) => new(code, message, ErrorType.Validation);
+        public static Error NotFound(string code, string message) => new(code, message, ErrorType.NotFound);
+        public static Error Conflict(string code, string message) => new(code, message, ErrorType.Conflict);
+        public static Error Failure(string code, string message) => new(code, message, ErrorType.Failure);
+    }
+
+    public enum ErrorType
+    {
+        Failure = 0,
+        Validation = 1,
+        NotFound = 2,
+        Conflict = 3
+    }
+
+    public static class ErrorCodes
+    {
+        public const string NotFound = "NotFound";
+        public const string Validation = "Validation";
+        public const string Conflict = "Conflict";
+        public const string Failure = "Failure";
+    }
+}</code></pre>
+        <p><b>Why a rich error type?</b></p>
+        <ul>
+            <li><b>Categorisation</b> – <code>ErrorType</code> allows different handling (e.g., 404 for <code>NotFound</code>, 400 for <code>Validation</code>).</li>
+            <li><b>Consistency</b> – every error has a code and message, easy to log, display, or transform.</li>
+            <li><b>Extensibility</b> – you can add more error types as your application grows.</li>
+            <li><b>Immutable</b> – as a record, it’s thread‑safe and behaves like a value object.</li>
+        </ul>
+
+        <h2>Using the Result Pattern in Your Services</h2>
+        <p>
+            Here’s a typical service method that returns a <code>Result&lt;TValue&gt;</code>:
+        </p>
+        <pre><code>public Result&lt;User&gt; GetUserById(int id)
+{
+    var user = _repository.Find(id);
+    if (user is null)
+        return Error.NotFound(ErrorCodes.NotFound, $"User with id {id} not found.");
+
+    return user;
+}</code></pre>
+        <p>
+            Notice the implicit conversions: returning a <code>User</code> automatically wraps it in a <code>Result&lt;User&gt;.Success</code>, and returning an <code>Error</code> turns it into a failure. The caller must handle both possibilities:
+        </p>
+        <pre><code>var result = _userService.GetUserById(42);
+if (result.IsSuccess)
+{
+    Console.WriteLine($"User name: {result.Value.Name}");
+}
+else
+{
+    Console.WriteLine($"Error: {result.Error.Message}");
+}</code></pre>
+        <p>But we can do even better with the <code>Match</code> extension methods.</p>
+
+        <h2>Bridging to HTTP with Extension Methods</h2>
+        <p>
+            In web applications, we often need to convert a <code>Result</code> into an HTTP response. Manually checking <code>IsSuccess</code> and returning the appropriate status code is repetitive and error‑prone. The following extensions solve that elegantly.
+        </p>
+
+        <h2>The <code>Match</code> Methods</h2>
+        <pre><code>using Microsoft.AspNetCore.Http;
+using SharedKernal.Results;
+using HttpResults = Microsoft.AspNetCore.Http.Results;
+
+namespace SharedKernal.Extensions;
+
+public static class ResultExtensions
+{
+    public static IResult Match&lt;TValue&gt;(
+        this Result&lt;TValue&gt; result,
+        Func&lt;TValue, IResult&gt; onSuccess) =>
+        result.IsSuccess ? onSuccess(result.Value) : result.ToHttpResult();
+
+    public static IResult Match(
+        this Result result,
+        Func&lt;IResult&gt; onSuccess) =>
+        result.IsSuccess ? onSuccess() : result.ToHttpResult();
+
+    public static IResult Match(
+        this Result result,
+        IResult onSuccess) =>
+        result.IsSuccess ? onSuccess : result.ToHttpResult();
+
+    private static IResult ToHttpResult(this Result result)
+    {
+        var validationErrors = result.Errors
+            .Where(e => e.Type == ErrorType.Validation)
+            .ToList();
+
+        if (validationErrors.Count > 0)
+        {
+            var errors = validationErrors
+                .GroupBy(e => e.Code)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(e => e.Message).ToArray());
+
+            return HttpResults.ValidationProblem(errors);
+        }
+
+        return result.Error.ToHttpResult();
+    }
+
+    private static IResult ToHttpResult(this Error error) =>
+        error.Type switch
+        {
+            ErrorType.Validation => HttpResults.BadRequest(new { error.Code, error.Message }),
+            ErrorType.NotFound => HttpResults.NotFound(new { error.Code, error.Message }),
+            ErrorType.Conflict => HttpResults.Conflict(new { error.Code, error.Message }),
+            _ => HttpResults.Problem(error.Message)
+        };
+}</code></pre>
+        <p>
+            There are three overloads for <code>Match</code>:
+        </p>
+        <ul>
+            <li>For <code>Result&lt;TValue&gt;</code> – you provide a function that maps the successful value to an <code>IResult</code>.</li>
+            <li>For non‑generic <code>Result</code> – you provide a function that returns an <code>IResult</code> on success.</li>
+            <li>For non‑generic <code>Result</code> – you provide an <code>IResult</code> object directly.</li>
+        </ul>
+        <p>
+            In all cases, if the result is a failure, it’s automatically converted to an appropriate HTTP error response via <code>ToHttpResult</code>.
+        </p>
+        <p>
+            The <code>ToHttpResult</code> method groups validation errors and returns a <code>ValidationProblem</code> (RFC 7807). Other error types are mapped to status codes: <code>NotFound</code> → 404, <code>Conflict</code> → 409, <code>Failure</code> → 500.
+        </p>
+
+        <h2>The Controller‑Friendly Version</h2>
+        <p>
+            For MVC controllers (which return <code>IActionResult</code>), we have similar extensions:
+        </p>
+        <pre><code>public static class ControllerResultExtensions
+{
+    public static IActionResult Match&lt;TValue&gt;(
+        this Result&lt;TValue&gt; result,
+        Func&lt;TValue, IActionResult&gt; onSuccess) =>
+        result.IsSuccess ? onSuccess(result.Value) : result.ToActionResult();
+
+    public static IActionResult Match(
+        this Result result,
+        Func&lt;IActionResult&gt; onSuccess) =>
+        result.IsSuccess ? onSuccess() : result.ToActionResult();
+
+    public static IActionResult Match(
+        this Result result,
+        IActionResult onSuccess) =>
+        result.IsSuccess ? onSuccess : result.ToActionResult();
+
+    private static IActionResult ToActionResult(this Result result)
+    {
+        var validationErrors = result.Errors
+            .Where(e => e.Type == ErrorType.Validation)
+            .ToList();
+
+        if (validationErrors.Count > 0)
+        {
+            var errors = validationErrors
+                .GroupBy(e => e.Code)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(e => e.Message).ToArray());
+
+            return new BadRequestObjectResult(new ValidationProblemDetails(errors));
+        }
+
+        return result.Error.ToActionResult();
+    }
+
+    private static IActionResult ToActionResult(this Error error) =>
+        error.Type switch
+        {
+            ErrorType.Validation => new BadRequestObjectResult(new { error.Code, error.Message }),
+            ErrorType.NotFound   => new NotFoundObjectResult(new { error.Code, error.Message }),
+            ErrorType.Conflict   => new ConflictObjectResult(new { error.Code, error.Message }),
+            _                    => new ObjectResult(new { error.Code, error.Message }) { StatusCode = 500 }
+        };
+}</code></pre>
+        <p>
+            The only difference is the use of <code>BadRequestObjectResult</code>, <code>NotFoundObjectResult</code>, etc., instead of the minimal API <code>Results</code> factory.
+        </p>
+
+        <h2>Putting It All Together: A Controller Example</h2>
+        <p>
+            Here’s a minimal API endpoint using the <code>Match</code> method:
+        </p>
+        <pre><code>app.MapGet("/users/{id}", (int id, IUserService service) =>
+{
+    return service.GetUserById(id).Match(
+        user => Results.Ok(user)
+    );
+});</code></pre>
+        <p>
+            If the user is found, <code>Results.Ok(user)</code> is returned. If not, the <code>Match</code> method automatically handles the failure and returns a 404 with the error details. No explicit <code>if</code> statements, no manual status codes – clean, declarative code.
+        </p>
+        <p>For a controller action:</p>
+        <pre><code>[HttpGet("{id}")]
+public IActionResult GetUser(int id)
+{
+    return _userService.GetUserById(id).Match(
+        user => Ok(user)
+    );
+}</code></pre>
+        <p>The failure path is completely handled by the extension.</p>
+
+        <h2>Why This Approach Shines</h2>
+        <ul>
+            <li><b>Separation of concerns</b> – business logic returns a <code>Result</code>; infrastructure knows how to turn it into an HTTP response.</li>
+            <li><b>Consistent error formatting</b> – all validation errors are returned as a <code>ValidationProblem</code> with property‑level details.</li>
+            <li><b>Type‑safe and self‑documenting</b> – the <code>Match</code> method makes it obvious that the result could be a failure.</li>
+            <li><b>Testability</b> – services can be unit‑tested without worrying about HTTP status codes.</li>
+            <li><b>Flexibility</b> – you can easily add more error types and corresponding HTTP mappings.</li>
+        </ul>
+
+        <h2>Conclusion</h2>
+        <p>
+            The Result pattern is a powerful ally in building maintainable, predictable applications. By making errors explicit and providing rich error types, you push error handling to the edges of your system – exactly where it belongs. The extension methods we’ve explored seamlessly integrate with ASP.NET Core, reducing boilerplate and ensuring consistent API responses.
+        </p>
+        <p>
+            If you’re tired of fighting with exceptions for control flow, give the Result pattern a try. Start with the implementation above, adapt it to your needs, and enjoy cleaner, more robust code.
+        </p>
+        <p>Happy coding!</p>
+    </div>
+</div>
+
+				<!-- Footer -->
+					<footer id="footer">
+						<div class="inner">
+							<section>
+								<!--
+								<h2>Get in touch</h2>
+
+								 dont send me anything :') 
+								 
+								<form method="post" action="#">
+									<div class="fields">
+										<div class="field half">
+											<input type="text" name="name" id="name" placeholder="Name" />
+										</div>
+										<div class="field half">
+											<input type="email" name="email" id="email" placeholder="Email" />
+										</div>
+										<div class="field">
+											<textarea name="message" id="message" placeholder="Message"></textarea>
+										</div>
+									</div>
+									<ul class="actions">
+										<li><input type="submit" value="Send" class="primary" /></li>
+									</ul>
+								</form>
+								!-->
+							</section>
+							<section>
+								<h2>Follow</h2>
+								<ul class="icons">
+									<li><a href="https://twitter.com/Dr_whoami_" class="icon brands style2 fa-twitter"><span class="label">Twitter</span></a></li>
+									<li><a href="https://github.com/khraoverflow" class="icon brands style2 fa-github"><span class="label">GitHub</span></a></li>
+									<li><a href="https://github.com/thou-mayest" class="icon brands style2 fa-github"><span class="label">GitHub</span></a></li>
+									
+								</ul>
+							</section>
+							<ul class="copyright">
+								<li>&copy; Untitled. All rights reserved</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+							</ul>
+						</div>
+					</footer>
+
+			</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
